@@ -7,7 +7,7 @@ from django.conf.urls import patterns, include, url
 urlpatterns = patterns('',
     
     url(r'^$', 'pet_chooser.views.witch_journey', name='home'),
-    url(r'^/(?P<form_name>.+)/$', 'pet_chooser.views.witch_journey', name='named_form'),
+    url(r'^(?P<form_name>.+)/$', 'pet_chooser.views.witch_journey', name='named_form'),
     # url(r'^witchform/', include('witchform.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:

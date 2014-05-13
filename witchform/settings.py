@@ -1,6 +1,9 @@
 # Django settings for witchform project.
 import os
 
+# in memory data - this is an experiment - no real data store
+TEMP_DATA = {}
+
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

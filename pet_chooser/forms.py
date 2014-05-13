@@ -2,18 +2,18 @@ from django import forms
 
 from pprint import pprint
 
-from witchform.cauldron import Cauldron
-from witchform.cauldron_ingredient import CauldronIngredient
+from witchform.cauldron import Cauldron, CauldronFormMixin
+from witchform.cauldron_toil import CauldronIngredient
 
 yes_no_choices = [  ('yes', 'Yes'),
                     ('no', 'No'),
                  ]
 
 
-class HairAllergy(forms.Form):
+class HairAllergy(forms.Form, CauldronFormMixin):
     has_hair_allergy = forms.BooleanField(required=False)
 
-class HouseType(forms.Form):
+class HouseType(forms.Form, CauldronFormMixin):
     house_type_choices = [  ('flat', 'Flat or Maisonette'),
                             ('farm', 'Farm'),
                          ] 
@@ -28,9 +28,15 @@ class HouseType(forms.Form):
         if True:
             return True
 
-class SuggestReptile(forms.Form):
+class SuggestReptile(forms.Form, CauldronFormMixin):
     yes_no = forms.ChoiceField(choices=yes_no_choices, required=True, widget=forms.RadioSelect)
     has_small_house = CauldronIngredient('HouseType.has_small_house')
+
+    def build_form(self):
+        if self.has_small_house:
+            print "SuggestReptile has small house"
+        else:
+            print "SuggestReptile not has small house"
 
 
 
