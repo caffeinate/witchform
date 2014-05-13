@@ -4,12 +4,12 @@ from django.utils import simplejson
 
 from pprint import pprint
 
-from forms import PetsCauldron
+from forms import PetsCauldron, HouseType
 
-def witch_journey(request):
+def witch_journey(request, form_name=None):
 
     context_vars = {}
-    cauldron = PetsCauldron()
+    cauldron = PetsCauldron(form_name)
     
     if request.method == 'POST':
         form = HouseType(request.POST)
