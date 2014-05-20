@@ -14,8 +14,8 @@ class Cauldron(object):
     """
     Container and controller for a set of forms
     """
-    form_set = [] # must be defined by each child class 
-
+    form_set = [] # must be defined by each child class
+    
     def __init__(self, current_form_name=None):
 
         if len(self.form_set) == 0:
@@ -28,13 +28,21 @@ class Cauldron(object):
             if f.form_name in self._form_set:
                 raise Exception("Cauldron contains duplicate forms [%s]" % f.form_name)
             self._form_set[f.form_name] = f
-        
-        if not current_form_name:
-            self.current_form = self._form_set[current_form_name]
 
-            
-        
-        
+        if current_form_name and current_form_name not in self._form_set:
+            raise Exception("Unknown form")
+        self._current_form_name = current_form_name
+
+
+    @property
+    def current_form(self):
+        if self._current_form_name:
+            # I am here
+            return self._form_set[self._current_form_name]
+        else:
+            a_ready_form = self._get_ready_forms()[0]
+            return self._form_set[a_ready_form.form_name]
+
     
     def _get_complete_forms(self):
         """
@@ -72,6 +80,7 @@ class Cauldron(object):
         json = self.current_form.save_serialise()
         settings.TEMP_DATA[self.current_form.form_name] = json
         pprint(settings.TEMP_DATA)
+
 
 class CauldronFormMixin(object):
     
