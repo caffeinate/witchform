@@ -20,13 +20,17 @@ class Cauldron(object):
 
         if len(self.form_set) == 0:
             raise NotImplementedError("form_set must be populated by implementing classes")
-        
+
         # re-project into more convenient internal structure
         self._form_set = {}
         for form in self.form_set:
             f = _CauldronForm(form)
             if f.form_name in self._form_set:
                 raise Exception("Cauldron contains duplicate forms [%s]" % f.form_name)
+
+            if f.form_name in settings.TEMP_DATA:
+                f.set_values(settings.TEMP_DATA[f.form_name])
+
             self._form_set[f.form_name] = f
 
         if current_form_name and current_form_name not in self._form_set:
@@ -62,13 +66,12 @@ class Cauldron(object):
         (i) ingredients are ready (i.e. the form that creates the ingredient has finished)
         (ii) .ready() method returns True
         (iii) has not already been called
-        """
-        
-        # TODO 
-        
+        """        
+        # TODO
         ready = []
-        for form_name,cauldron_form in self._form_set.iteritems():
-            if len(cauldron_form.ingredients) == 0 and cauldron_form.ready():
+        for cauldron_form in self._form_set.itervalues():
+            if len(cauldron_form.ingredients) == 0 and cauldron_form.ready()\
+            and not cauldron_form.has_values:
                 ready.append(cauldron_form)
         return ready
     
@@ -76,13 +79,19 @@ class Cauldron(object):
         """
         save current form then re-calculate which other forms are now ready
         """
+        form_name = self.current_form.form_name
         # TODO - temp save data to memory that is persistent between requests
         django_form = self.current_form.instance
         json = django_form.save_serialise()
-        settings.TEMP_DATA[self.current_form.form_name] = json
+        settings.TEMP_DATA[form_name] = json
 
         # update which forms are ready to be used
-        # I am here
+        for cauldron_form in self._form_set.itervalues():
+            ingredients = cauldron_form.ingredients_required(form_name)
+            if ingredients:
+                for i in ingredients:
+                    print "would populate with %s now" % i
+                
 
 
 class CauldronFormMixin(object):

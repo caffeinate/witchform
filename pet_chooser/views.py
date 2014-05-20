@@ -1,7 +1,8 @@
 from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-
 
 from pprint import pprint
 
@@ -19,7 +20,7 @@ def witch_journey(request, form_name=None):
         if form.is_valid():
             
             cauldron.save()
-            next_form = cauldron.current_form.instance
+            next_form = cauldron.current_form
             # be good and redirect
             return HttpResponseRedirect(reverse('named_form',
                                                 args=(next_form.form_name,)

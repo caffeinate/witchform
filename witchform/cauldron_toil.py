@@ -60,14 +60,23 @@ class _CauldronForm(object):
         self.form_name = get_form_name(form)
         self._instance = None
         self.ingredients = get_ingredients(form)
+        self.has_values = False
+        self.values = {}
 
+    def set_values(self, values):
+        """
+        This form has already been submitted by the user with these values
+        """
+        self.has_values = True
+        self.values = values
+    
     @property
     def instance(self):
         """
         instantiate on demand
         """
         if not self._instance:
-            self._instance = self.instance_unbounded()
+            self._instance = self.instance_unbounded(initial=self.values)
         return self._instance
 
     def populate_from_POST(self, post_data):
@@ -79,6 +88,20 @@ class _CauldronForm(object):
         # maybe - if already initialised just fill the form
         self._instance = self.instance_unbounded(post_data)
         return self._instance
+
+    def ingredients_required(self, form_name):
+        """
+        for the given form, return list of ingredients the current form needs.
+
+        @param form_name: String
+        @return: list of property names; empty for nothing
+        """
+        required = []
+        for (ingredient, form_property) in self.ingredients:
+            required_form = form_property.split('.')[0]
+            if required_form == form_name:
+                required.append(form_property.split('.')[1])
+        return required
 
     def ready(self):
         return self.instance.ready()
