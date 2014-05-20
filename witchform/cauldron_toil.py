@@ -70,5 +70,15 @@ class _CauldronForm(object):
             self._instance = self.instance_unbounded()
         return self._instance
 
+    def populate_from_POST(self, post_data):
+        """
+        instantiate form with unclean data from form
+        @param post_data: is probably going to be request.POST
+        @return: the django form
+        """
+        # maybe - if already initialised just fill the form
+        self._instance = self.instance_unbounded(post_data)
+        return self._instance
+
     def ready(self):
         return self.instance.ready()

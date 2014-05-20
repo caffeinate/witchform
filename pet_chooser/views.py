@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
@@ -9,30 +10,24 @@ from forms import PetsCauldron, HouseType
 def witch_journey(request, form_name=None):
 
     context_vars = {}
+    pprint(settings.TEMP_DATA)
     
     if request.method == 'POST':
 
         cauldron = PetsCauldron(form_name)
-        form = HouseType(request.POST)
+        form = cauldron.current_form.populate_from_POST(request.POST)
         if form.is_valid():
             
             cauldron.save()
-            
-            pprint(form.cleaned_data)
-            
-            if form.has_small_house:
-                print "small house when valid"
-#             json_string = simplejson.dumps(location_extract)
-#             return HttpResponse(content=json_string, mimetype='application/json')
-#         else:
-#             json_string = simplejson.dumps([])
-#             return HttpResponse(content=json_string, mimetype='application/json')
+            next_form = cauldron.current_form.instance
+            # be good and redirect
+            return HttpResponseRedirect(reverse('named_form',
+                                                args=(next_form.form_name,)
+                                       ))
+
     else:
         cauldron = PetsCauldron()
-        form = HouseType()
-        if form.has_small_house == None:
-            print "small house when init"
-
+        form = cauldron.current_form.instance
 
     context_vars['form'] = form
     context_vars['cauldron'] = cauldron

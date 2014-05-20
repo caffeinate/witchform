@@ -74,12 +74,15 @@ class Cauldron(object):
     
     def save(self):
         """
-        
+        save current form then re-calculate which other forms are now ready
         """
-        # TODO
-        json = self.current_form.save_serialise()
+        # TODO - temp save data to memory that is persistent between requests
+        django_form = self.current_form.instance
+        json = django_form.save_serialise()
         settings.TEMP_DATA[self.current_form.form_name] = json
-        pprint(settings.TEMP_DATA)
+
+        # update which forms are ready to be used
+        # I am here
 
 
 class CauldronFormMixin(object):
