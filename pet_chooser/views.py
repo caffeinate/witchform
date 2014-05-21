@@ -20,10 +20,9 @@ def witch_journey(request, form_name=None):
         if form.is_valid():
             
             cauldron.save()
-            next_form = cauldron.current_form
             # be good and redirect
             return HttpResponseRedirect(reverse('named_form',
-                                                args=(next_form.form_name,)
+                                                args=(cauldron.next_form.form_name,)
                                        ))
 
     else:

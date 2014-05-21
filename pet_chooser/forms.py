@@ -32,11 +32,19 @@ class SuggestReptile(forms.Form, CauldronFormMixin):
     yes_no = forms.ChoiceField(choices=yes_no_choices, required=True, widget=forms.RadioSelect)
     has_small_house = CauldronIngredient('HouseType.has_small_house')
 
-    def build_form(self):
-        if self.has_small_house:
-            print "SuggestReptile has small house"
-        else:
-            print "SuggestReptile not has small house"
+    def ready(self):
+        if self.has_small_house.has_value():
+            print "has value"
+            if self.has_small_house.get_value() == True:
+                print "does have small house"
+            else:
+                print "has big house"
+            return True
+        return False
+    
+#     def is_complete(self):
+#         return not self.has_small_house.has_value()
+
 
 
 

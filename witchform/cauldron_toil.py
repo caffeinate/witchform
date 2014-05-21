@@ -11,6 +11,31 @@ class CauldronIngredient(object):
         @param source: a string representing a form.property
         """
         self.source = source
+        self.value = None
+        self.value_set = False
+
+    def __str__(self):
+        return self.get_source_name()
+    
+    def get_source_name(self):
+        """
+        @return: String - full name of form.property. e.g. 'HouseType.has_small_house'
+        """
+        return self.source
+    
+    def has_value(self):
+        """
+        might need to use tri-state so use this.
+        @return: bool - never None
+        """
+        return self.value_set
+
+    def set_value(self, value):
+        self.value = value
+        self.value_set = True
+    
+    def get_value(self):
+        return self.value
 
 
 
@@ -40,13 +65,13 @@ def get_ingredients(form):
     Forms belonging to a cauldron declare the inputs needed from other forms.
 
     @param form: not initialised & unbounded form
-    @return: list of tuples ('ingredient', 'form.property'). 
+    @return: dictionary of 'form.property' -> <CauldronIngredient> 
              Former is in class declaration, later is source_form.property
     """
-    ingredients = []
+    ingredients = {}
     for k,v in form.__dict__.iteritems():
         if isinstance(v, CauldronIngredient):
-            ingredients.append((v, v.source))
+            ingredients[v.source] = v
     return ingredients
 
 
@@ -62,6 +87,9 @@ class _CauldronForm(object):
         self.ingredients = get_ingredients(form)
         self.has_values = False
         self.values = {}
+    
+    def __str__(self):
+        return self.form_name
 
     def set_values(self, values):
         """
@@ -69,6 +97,21 @@ class _CauldronForm(object):
         """
         self.has_values = True
         self.values = values
+    
+    def is_complete(self):
+        """
+        don't show to user if complete.
+        
+        If has_values then user has been shown then form but the form could also
+        invalidate itself by returning True to it's is_complete.
+        
+        @return: bool
+        """
+        instance_complete = self.instance.is_complete()
+        if instance_complete == None:
+            return self.has_values
+
+        return instance_complete
     
     @property
     def instance(self):
@@ -94,14 +137,21 @@ class _CauldronForm(object):
         for the given form, return list of ingredients the current form needs.
 
         @param form_name: String
-        @return: list of property names; empty for nothing
+        @return: list of property names (string) OR empty list for nothing
         """
         required = []
-        for (ingredient, form_property) in self.ingredients:
+        for form_property, ingredient in self.ingredients.iteritems():
             required_form = form_property.split('.')[0]
             if required_form == form_name:
                 required.append(form_property.split('.')[1])
         return required
+    
+    def set_ingredient(self, form_property, ingredient_value):
+        """
+        @param form_property: String of full form name. e.g. 'HouseType.has_small_house'
+        """
+        self.ingredients[form_property].set_value(ingredient_value)
+    
 
     def ready(self):
         return self.instance.ready()

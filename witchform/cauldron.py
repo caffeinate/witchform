@@ -29,7 +29,7 @@ class Cauldron(object):
                 raise Exception("Cauldron contains duplicate forms [%s]" % f.form_name)
 
             if f.form_name in settings.TEMP_DATA:
-                f.set_values(settings.TEMP_DATA[f.form_name])
+                f.set_values(settings.TEMP_DATA[f.form_name]['form_fields'])
 
             self._form_set[f.form_name] = f
 
@@ -63,15 +63,19 @@ class Cauldron(object):
         @return: subset list of self._form_set
         
         subset is a list of forms who's-
-        (i) ingredients are ready (i.e. the form that creates the ingredient has finished)
+        (i) ingredients are ready (i.e. the form that creates the ingredient has finished
+                                   OR has no ingredients )
+          AND
         (ii) .ready() method returns True
+          AND
         (iii) has not already been called
         """        
         # TODO
         ready = []
         for cauldron_form in self._form_set.itervalues():
-            if len(cauldron_form.ingredients) == 0 and cauldron_form.ready()\
-            and not cauldron_form.has_values:
+            # len(cauldron_form.ingredients) == 0 and
+            if cauldron_form.ready()\
+            and not cauldron_form.is_complete():
                 ready.append(cauldron_form)
         return ready
     
@@ -79,18 +83,41 @@ class Cauldron(object):
         """
         save current form then re-calculate which other forms are now ready
         """
-        form_name = self.current_form.form_name
+
         # TODO - temp save data to memory that is persistent between requests
+        
+
+        fresh_ingredients = self._update_ingredients(self.current_form)        
         django_form = self.current_form.instance
         json = django_form.save_serialise()
-        settings.TEMP_DATA[form_name] = json
+        self.current_form.set_values(django_form.cleaned_data)
+        form_name = self.current_form.form_name
+        settings.TEMP_DATA[form_name] = { 'form_fields' : json,
+                                          'resulting_ingredients' : fresh_ingredients
+                                        }
+    
+    @property
+    def next_form(self):
+        ready_forms = self._get_ready_forms()
+        return ready_forms[0]
 
-        # update which forms are ready to be used
+
+    def _update_ingredients(self, current_cauldron_form):
+        """
+        update forms which depended on a value from the form which has just been saved
+        @return: dict of short_ingedient_name => ingredient_value - just those needed by other forms
+        """
+        form_name = current_cauldron_form.form_name
+        fresh_ingredients = {}
         for cauldron_form in self._form_set.itervalues():
             ingredients = cauldron_form.ingredients_required(form_name)
-            if ingredients:
-                for i in ingredients:
-                    print "would populate with %s now" % i
+            for i in ingredients:
+                fq_ingredient = "%s.%s" % (form_name, i)
+                ready_ingredient = getattr(current_cauldron_form.instance, i)
+                print "would populate %s with %s which eq. %s" % (cauldron_form.form_name, fq_ingredient, ready_ingredient)
+                cauldron_form.set_ingredient(fq_ingredient, ready_ingredient)
+                fresh_ingredients[i] = ready_ingredient
+        return fresh_ingredients
                 
 
 
@@ -102,6 +129,14 @@ class CauldronFormMixin(object):
         @return bool: if form can be displayed i.e. form as is ready for user input
         """
         return True
+    
+    def is_complete(self):
+        """
+        @return None (unknown to form); True or False if this form has been completed by user
+        
+        @see: _CauldronForm.is_complete()
+        """
+        return None
 
     def build_form(self):
         """
