@@ -11,7 +11,7 @@ from forms import PetsCauldron, HouseType
 def witch_journey(request, form_name=None):
 
     context_vars = {}
-    pprint(settings.TEMP_DATA)
+#     pprint(settings.TEMP_DATA)
     
     if request.method == 'POST':
 
@@ -26,7 +26,7 @@ def witch_journey(request, form_name=None):
                                        ))
 
     else:
-        cauldron = PetsCauldron()
+        cauldron = PetsCauldron(form_name)
         form = cauldron.current_form.instance
 
     context_vars['form'] = form

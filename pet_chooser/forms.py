@@ -15,6 +15,7 @@ class HairAllergy(forms.Form, CauldronFormMixin):
 
 class HouseType(forms.Form, CauldronFormMixin):
     house_type_choices = [  ('flat', 'Flat or Maisonette'),
+                            ('mansion', 'Mansion or Stately home'),
                             ('farm', 'Farm'),
                          ] 
     houseType = forms.ChoiceField(choices=house_type_choices, required=True, widget=forms.RadioSelect)
@@ -25,8 +26,8 @@ class HouseType(forms.Form, CauldronFormMixin):
         if not hasattr(self, 'cleaned_data'):
             return None
         
-        if True:
-            return True
+        return self.cleaned_data['houseType'] in ['farm', 'mansion']
+
 
 class SuggestReptile(forms.Form, CauldronFormMixin):
     yes_no = forms.ChoiceField(choices=yes_no_choices, required=True, widget=forms.RadioSelect)

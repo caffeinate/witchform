@@ -29,11 +29,12 @@ class Cauldron(object):
                 raise Exception("Cauldron contains duplicate forms [%s]" % f.form_name)
 
             if f.form_name in settings.TEMP_DATA:
-                f.set_values(settings.TEMP_DATA[f.form_name]['form_fields'])
+                d = simplejson.loads(settings.TEMP_DATA[f.form_name]['form_fields'])
+                f.set_values(d)
 
             self._form_set[f.form_name] = f
 
-        if current_form_name and current_form_name not in self._form_set:
+        if current_form_name and current_form_name not in self._form_set.keys():
             raise Exception("Unknown form")
         self._current_form_name = current_form_name
 
@@ -85,6 +86,7 @@ class Cauldron(object):
         """
 
         # TODO - temp save data to memory that is persistent between requests
+        #        does serialise the forms but needn't as it's memory
         
 
         fresh_ingredients = self._update_ingredients(self.current_form)        
