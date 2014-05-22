@@ -47,14 +47,15 @@ class HouseType(forms.Form, CauldronFormMixin):
     @property
     def has_small_house(self):        
         houseType = self.cleaned_data['houseType']
-        return houseType in ['farm', 'mansion']
+        return houseType not in ['farm', 'mansion']
 
 
 class SuggestCrocodile(forms.Form, CauldronFormMixin):
     how_about_a_crocodile = forms.ChoiceField(choices=yes_no_choices, required=True, widget=forms.RadioSelect)
     has_small_house = CauldronIngredient('HouseType.has_small_house')
-    has_small_children = CauldronIngredient('SmallChildren.has_small_house')
+    has_small_children = CauldronIngredient('SmallChildren.has_small_children')
     likes_scales = CauldronIngredient('SkinType.likes_scales')
+    likes_claws_or_sharp_teeth = CauldronIngredient('SkinType.likes_claws_or_sharp_teeth')
 
     def ready(self):
         
@@ -66,7 +67,7 @@ class SuggestCrocodile(forms.Form, CauldronFormMixin):
         x =(self.has_small_house.has_value() \
         and self.has_small_children.has_value() \
         and self.likes_scales.has_value() \
-        and self.is_complete())
+        and not self.is_complete())
 
         return x
     
@@ -76,7 +77,7 @@ class SuggestCrocodile(forms.Form, CauldronFormMixin):
         if self.has_small_house.has_value() and self.has_small_house.get_value() == False:
             return True
 
-        if self.has_small_children.has_value() and self.has_small_children.get_value() == False:
+        if self.has_small_children.has_value() and self.has_small_children.get_value() == True:
             return True
         
         if self.likes_scales.has_value() and self.likes_scales.get_value() == False:

@@ -132,9 +132,9 @@ class _CauldronForm(object):
         self._instance = self.instance_unbounded(post_data)
         return self._instance
 
-    def ingredients_required(self, form_name=None):
+    def ingredients_required_from_form(self, form_name=None):
         """
-        for the given form, return list of ingredients the current form needs.
+        for the given form, return list of ingredients that the current form needs.
 
         @param form_name: String or None to return all
         @return: list of fully qualified property names (string) OR empty list for nothing

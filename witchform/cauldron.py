@@ -21,6 +21,14 @@ class Cauldron(object):
         if len(self.form_set) == 0:
             raise NotImplementedError("form_set must be populated by implementing classes")
 
+        self._update_formset()
+
+        if current_form_name and current_form_name not in self._form_set.keys():
+            raise Exception("Unknown form")
+        self._current_form_name = current_form_name
+
+
+    def _update_formset(self):
         # re-project into more convenient internal structure
         self._form_set = {}
         for form in self.form_set:
@@ -33,19 +41,16 @@ class Cauldron(object):
                 f.set_values(d)
 
             # load ingredients if available (i.e. if form has been filled in by user
-            for fq_ingredient in f.ingredients_required():
+            for fq_ingredient in f.ingredients_required_from_form():
                 target_form, required_ingredient = fq_ingredient.split(".")
                 if target_form in settings.TEMP_DATA \
                 and 'resulting_ingredients' in settings.TEMP_DATA[target_form] \
                 and required_ingredient in settings.TEMP_DATA[target_form]['resulting_ingredients']:
                     i = settings.TEMP_DATA[target_form]['resulting_ingredients'][required_ingredient]
-                    f.set_ingredient(required_ingredient, i)
+                    f.set_ingredient(fq_ingredient, i)
 
             self._form_set[f.form_name] = f
 
-        if current_form_name and current_form_name not in self._form_set.keys():
-            raise Exception("Unknown form")
-        self._current_form_name = current_form_name
 
 
     @property
@@ -103,10 +108,13 @@ class Cauldron(object):
         form_name = self.current_form.form_name
         settings.TEMP_DATA[form_name] = { 'form_fields' : json }
 
-        if django_form.is_complete():
+        if self.current_form.is_complete():
             # @see note in CauldronFormMixin
-            fresh_ingredients = self._update_ingredients(self.current_form)
+            fresh_ingredients = self._get_required_ingredients(self.current_form)
             settings.TEMP_DATA[form_name]['resulting_ingredients'] = fresh_ingredients
+        
+        self._update_formset()
+
 
     @property
     def next_form(self):
@@ -114,21 +122,21 @@ class Cauldron(object):
         return ready_forms[0]
 
 
-    def _update_ingredients(self, current_cauldron_form):
+    def _get_required_ingredients(self, current_cauldron_form):
         """
-        update forms which depended on a value from the form which has just been saved
-        @return: dict of short_ingedient_name => ingredient_value - just those needed by other forms
+        get ingredients that are in demand by other forms
+        @param current_cauldron_form: source of ingredients - i.e. other forms need these ingredients
+        @return: dict short_ingedient_name => ingredient_value
         """
         form_name = current_cauldron_form.form_name
         fresh_ingredients = {}
         for cauldron_form in self._form_set.itervalues():
-            ingredients = cauldron_form.ingredients_required(form_name)
+            ingredients = cauldron_form.ingredients_required_from_form(form_name)
             for fq_ingredient in ingredients:
-                i = fq_ingredient.split(".")[1]
-                ready_ingredient = getattr(current_cauldron_form.instance, i)
-                print "would populate %s with %s which eq. %s" % (cauldron_form.form_name, fq_ingredient, ready_ingredient)
-                cauldron_form.set_ingredient(fq_ingredient, ready_ingredient)
-                fresh_ingredients[i] = ready_ingredient
+                short_ingredient = fq_ingredient.split(".")[1]
+                ready_ingredient = getattr(current_cauldron_form.instance, short_ingredient)
+                print "%s needs ingredient %s which has value of %s" % (cauldron_form.form_name, fq_ingredient, ready_ingredient)
+                fresh_ingredients[short_ingredient] = ready_ingredient
         return fresh_ingredients
                 
 
