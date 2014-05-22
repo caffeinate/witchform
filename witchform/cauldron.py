@@ -32,6 +32,15 @@ class Cauldron(object):
                 d = simplejson.loads(settings.TEMP_DATA[f.form_name]['form_fields'])
                 f.set_values(d)
 
+            # load ingredients if available (i.e. if form has been filled in by user
+            for fq_ingredient in f.ingredients_required():
+                target_form, required_ingredient = fq_ingredient.split(".")
+                if target_form in settings.TEMP_DATA \
+                and 'resulting_ingredients' in settings.TEMP_DATA[target_form] \
+                and required_ingredient in settings.TEMP_DATA[target_form]['resulting_ingredients']:
+                    i = settings.TEMP_DATA[target_form]['resulting_ingredients'][required_ingredient]
+                    f.set_ingredient(required_ingredient, i)
+
             self._form_set[f.form_name] = f
 
         if current_form_name and current_form_name not in self._form_set.keys():
@@ -87,17 +96,18 @@ class Cauldron(object):
 
         # TODO - temp save data to memory that is persistent between requests
         #        does serialise the forms but needn't as it's memory
-        
 
-        fresh_ingredients = self._update_ingredients(self.current_form)        
         django_form = self.current_form.instance
         json = django_form.save_serialise()
         self.current_form.set_values(django_form.cleaned_data)
         form_name = self.current_form.form_name
-        settings.TEMP_DATA[form_name] = { 'form_fields' : json,
-                                          'resulting_ingredients' : fresh_ingredients
-                                        }
-    
+        settings.TEMP_DATA[form_name] = { 'form_fields' : json }
+
+        if django_form.is_complete():
+            # @see note in CauldronFormMixin
+            fresh_ingredients = self._update_ingredients(self.current_form)
+            settings.TEMP_DATA[form_name]['resulting_ingredients'] = fresh_ingredients
+
     @property
     def next_form(self):
         ready_forms = self._get_ready_forms()
@@ -113,8 +123,8 @@ class Cauldron(object):
         fresh_ingredients = {}
         for cauldron_form in self._form_set.itervalues():
             ingredients = cauldron_form.ingredients_required(form_name)
-            for i in ingredients:
-                fq_ingredient = "%s.%s" % (form_name, i)
+            for fq_ingredient in ingredients:
+                i = fq_ingredient.split(".")[1]
                 ready_ingredient = getattr(current_cauldron_form.instance, i)
                 print "would populate %s with %s which eq. %s" % (cauldron_form.form_name, fq_ingredient, ready_ingredient)
                 cauldron_form.set_ingredient(fq_ingredient, ready_ingredient)
@@ -124,6 +134,14 @@ class Cauldron(object):
 
 
 class CauldronFormMixin(object):
+    
+    copy = "" # to override - displayed above input boxes; probably a question or statement
+    
+    """
+    Notes-
+    - @property[s] will only be called if is_complete() is True
+    
+    """
     
     def ready(self):
         """

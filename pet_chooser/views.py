@@ -11,7 +11,7 @@ from forms import PetsCauldron, HouseType
 def witch_journey(request, form_name=None):
 
     context_vars = {}
-#     pprint(settings.TEMP_DATA)
+    pprint(settings.TEMP_DATA)
     
     if request.method == 'POST':
 
