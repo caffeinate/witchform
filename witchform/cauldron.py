@@ -24,7 +24,7 @@ class Cauldron(object):
         self._update_formset()
 
         if current_form_name and current_form_name not in self._form_set.keys():
-            raise Exception("Unknown form")
+            raise Exception("Unknown form [%s]" % current_form_name)
         self._current_form_name = current_form_name
 
 
@@ -59,7 +59,7 @@ class Cauldron(object):
             # I am here
             return self._form_set[self._current_form_name]
         else:
-            a_ready_form = self._get_ready_forms()[0]
+            a_ready_form = self._get_in_demand_forms()[0]
             return self._form_set[a_ready_form.form_name]
 
     
@@ -72,6 +72,16 @@ class Cauldron(object):
         """
         # TODO
         pass
+
+    def _get_not_complete_forms(self):
+        """
+        @return: subset list of self._form_set of forms that aren't  is_complete()
+        """
+        f = []
+        for cauldron_form in self._form_set.itervalues():
+            if not cauldron_form.is_complete():
+                f.append(cauldron_form)
+        return f
     
     def _get_ready_forms(self):
         """
@@ -93,7 +103,26 @@ class Cauldron(object):
             and not cauldron_form.is_complete():
                 ready.append(cauldron_form)
         return ready
-    
+
+    def _get_in_demand_forms(self):
+        """
+        @return: subset list of self._form_set
+
+        subset is a list of forms which are ready and where another form (which isn't is_complete)
+        is expecting an ingredient from it.
+        """
+
+        # TODO make less brutish
+        d = []
+        ready_forms = self._get_ready_forms()
+        not_complete = self._get_not_complete_forms()
+        for f in not_complete:
+            for ff in ready_forms:
+                if len(f.ingredients_required_from_form(form_name=ff.form_name)) > 0:
+                    print "%s is in demand from %s" % (ff, f)
+                    d.append(ff)
+        return d
+
     def save(self):
         """
         save current form then re-calculate which other forms are now ready
@@ -118,8 +147,10 @@ class Cauldron(object):
 
     @property
     def next_form(self):
-        ready_forms = self._get_ready_forms()
-        return ready_forms[0]
+        on_demand_forms = self._get_in_demand_forms()
+        if len(on_demand_forms) > 0:
+            return on_demand_forms[0]
+        return None
 
 
     def _get_required_ingredients(self, current_cauldron_form):

@@ -34,7 +34,7 @@ class SmallChildren(forms.Form, CauldronFormMixin):
 
     @property
     def has_small_children(self):
-        return not self.cleaned_data['small_children']
+        return self.cleaned_data['small_children']=='yes'
 
 
 class HouseType(forms.Form, CauldronFormMixin):
@@ -58,12 +58,7 @@ class SuggestCrocodile(forms.Form, CauldronFormMixin):
     likes_claws_or_sharp_teeth = CauldronIngredient('SkinType.likes_claws_or_sharp_teeth')
 
     def ready(self):
-        
-        a = self.has_small_house.has_value()
-        b = self.has_small_children.has_value()
-        c = self.likes_scales.has_value()
-        d = self.is_complete()
-        
+
         x =(self.has_small_house.has_value() \
         and self.has_small_children.has_value() \
         and self.likes_scales.has_value() \
@@ -73,8 +68,12 @@ class SuggestCrocodile(forms.Form, CauldronFormMixin):
     
     def is_complete(self):
         
+        """
+        i.e. returning True means don't show this form
+        """
+
         # Demonstrating that all three ingredients need a particular value
-        if self.has_small_house.has_value() and self.has_small_house.get_value() == False:
+        if self.has_small_house.has_value() and self.has_small_house.get_value() == True:
             return True
 
         if self.has_small_children.has_value() and self.has_small_children.get_value() == True:
