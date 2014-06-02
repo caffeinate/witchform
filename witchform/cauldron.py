@@ -29,6 +29,10 @@ class Cauldron(object):
 
 
     def _update_formset(self):
+        """
+        Load all forms; instantiate any with data; pass ingredients around
+        """
+
         # re-project into more convenient internal structure
         self._form_set = {}
         for form in self.form_set:
@@ -40,7 +44,7 @@ class Cauldron(object):
                 d = simplejson.loads(settings.TEMP_DATA[f.form_name]['form_fields'])
                 f.set_values(d)
 
-            # load ingredients if available (i.e. if form has been filled in by user
+            # load ingredients if available (i.e. if form has been filled in by user)
             for fq_ingredient in f.ingredients_required_from_form():
                 target_form, required_ingredient = fq_ingredient.split(".")
                 if target_form in settings.TEMP_DATA \
@@ -51,8 +55,6 @@ class Cauldron(object):
 
             self._form_set[f.form_name] = f
 
-
-
     @property
     def current_form(self):
         if self._current_form_name:
@@ -61,17 +63,6 @@ class Cauldron(object):
         else:
             a_ready_form = self._get_in_demand_forms()[0]
             return self._form_set[a_ready_form.form_name]
-
-    
-    def _get_complete_forms(self):
-        """
-        @return: subset list of self._form_set of forms that have been filled in.
-        
-            TODO - think about whether to include forms that have fallen out of scope
-            if the user has changed answers and therefore flow through the forms
-        """
-        # TODO
-        pass
 
     def _get_not_complete_forms(self):
         """

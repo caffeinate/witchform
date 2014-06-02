@@ -41,12 +41,12 @@ class CauldronIngredient(object):
 
 def get_form_name(form):
     """
-    @param form: not initialised & unbounded form
-    @return: string of simplified name
+    @param form: un-initialised & unbounded form. e.g. <class 'pet_chooser.forms.HouseType'>
+    @return: string of simplified name            e.g. "HouseType"
     """
 
     """
-    can't just user form.__class__.__name__ because of multiple inheritance...
+    can't just use form.__class__.__name__ because of multiple inheritance...
     >>> str(h)
     "<class 'pet_chooser.forms.HouseType'>"
     >>> h.__class__.__name__
@@ -64,12 +64,12 @@ def get_ingredients(form):
     """
     Forms belonging to a cauldron declare the inputs needed from other forms.
 
-    @param form: not initialised & unbounded form
+    @param form: un-initialised & unbounded form
     @return: dictionary of 'form.property' -> <CauldronIngredient> 
-             Former is in class declaration, later is source_form.property
+             Former is source_form.property, later is class declaration 
     """
     ingredients = {}
-    for k,v in form.__dict__.iteritems():
+    for v in form.__dict__.iteritems().values():
         if isinstance(v, CauldronIngredient):
             ingredients[v.source] = v
     return ingredients
