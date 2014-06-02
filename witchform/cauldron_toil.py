@@ -69,7 +69,7 @@ def get_ingredients(form):
              Former is source_form.property, later is class declaration 
     """
     ingredients = {}
-    for v in form.__dict__.iteritems().values():
+    for v in form.__dict__.values():
         if isinstance(v, CauldronIngredient):
             ingredients[v.source] = v
     return ingredients

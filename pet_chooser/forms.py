@@ -62,6 +62,7 @@ class SuggestCrocodile(forms.Form, CauldronFormMixin):
         x =(self.has_small_house.has_value() \
         and self.has_small_children.has_value() \
         and self.likes_scales.has_value() \
+        and self.likes_claws_or_sharp_teeth.has_value() \
         and not self.is_complete())
 
         return x
@@ -82,14 +83,54 @@ class SuggestCrocodile(forms.Form, CauldronFormMixin):
         if self.likes_scales.has_value() and self.likes_scales.get_value() == False:
             return True
 
+        if self.likes_claws_or_sharp_teeth.has_value() and self.likes_claws_or_sharp_teeth.get_value() == False:
+            return True
+
         # returning None means the _CauldronForm decides if values have been set
         return None
 
+
+class SuggestGerbil(forms.Form, CauldronFormMixin):
+    how_about_a_gerbil = forms.ChoiceField(choices=yes_no_choices, required=True, widget=forms.RadioSelect)
+    likes_fur = CauldronIngredient('SkinType.likes_hair_or_fur')
+
+    def ready(self):
+        x =(self.likes_fur.has_value() \
+        and not self.is_complete())
+        return x
+    
+    def is_complete(self):
+        if self.likes_fur.has_value() and self.likes_fur.get_value() == False:
+            return True
+        return None
+
+    @property
+    def get_gerbil(self):
+        return self.cleaned_data['how_about_a_gerbil']=='yes'
+
+class SuggestPetX(forms.Form, CauldronFormMixin):
+    """
+    test form to ensure Suggest* questions are asked
+    """
+    xxx = forms.ChoiceField(choices=yes_no_choices, required=True, widget=forms.RadioSelect)
+    get_gerbil = CauldronIngredient('SuggestGerbil.get_gerbil')
+
+    def ready(self):
+        x =(self.get_gerbil.has_value() \
+        and not self.is_complete())
+        return x
+    
+    def is_complete(self):
+        if self.get_gerbil.has_value() and self.get_gerbil.get_value() == False:
+            return True
+        return None
 
 class PetsCauldron(Cauldron):
 
     form_set = [SkinType,
                 SmallChildren,
                 HouseType,
-                SuggestCrocodile
+                SuggestCrocodile,
+                SuggestGerbil,
+                SuggestPetX
                ]
