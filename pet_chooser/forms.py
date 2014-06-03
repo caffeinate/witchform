@@ -127,14 +127,14 @@ class SuggestHorse(forms.Form, CauldronFormMixin):
         if self.likes_fur.has_value() and self.likes_fur.get_value() == False:
             return True
 
-        if self.has_small_house.has_value() and self.has_small_house.get_value() == False:
+        if self.has_small_house.has_value() and self.has_small_house.get_value() == True:
             return True
 
         return None
 
     @property
     def get_horse(self):
-        return self.cleaned_data['how_about_a_gerbil']=='yes'
+        return self.cleaned_data['how_about_a_horse']=='yes'
 
 
 class SuggestPet(forms.Form, CauldronFormMixin):
@@ -163,5 +163,6 @@ class PetsCauldron(Cauldron):
                 HouseType,
                 SuggestCrocodile,
                 SuggestGerbil,
+                SuggestHorse,
                 SuggestPet
                ]
