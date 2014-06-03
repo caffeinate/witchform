@@ -3,7 +3,17 @@
 </head>
 <body>
 
-Finished
+<h1>Finished</h1>
+
+
+<p>Pet suggestions-</p>
+<ul>
+	{% for pet, yesno in get.iteritems %}
+		{% if yesno %}
+		<li>{{pet}}</li>
+		{% endif %}
+	{% endfor %}
+</ul>
 
 </body>
 </html>

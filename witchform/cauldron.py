@@ -58,10 +58,13 @@ class Cauldron(object):
     @property
     def current_form(self):
         if self._current_form_name:
-            # I am here
             return self._form_set[self._current_form_name]
+
+        demanded_forms = self._get_in_demand_forms()
+        if len(demanded_forms) == 0:
+            return None
         else:
-            a_ready_form = self._get_in_demand_forms()[0]
+            a_ready_form = demanded_forms[0]
             return self._form_set[a_ready_form.form_name]
 
     def _get_not_complete_forms(self):
@@ -110,7 +113,7 @@ class Cauldron(object):
         for f in not_complete:
             for ff in ready_forms:
                 if len(f.ingredients_required_from_form(form_name=ff.form_name)) > 0:
-                    print "%s is in demand from %s" % (ff, f)
+                    self.log("%s is in demand from %s" % (ff, f))
                     d.append(ff)
         return d
 
@@ -157,11 +160,25 @@ class Cauldron(object):
             for fq_ingredient in ingredients:
                 short_ingredient = fq_ingredient.split(".")[1]
                 ready_ingredient = getattr(current_cauldron_form.instance, short_ingredient)
-                print "%s needs ingredient %s which has value of %s" % (cauldron_form.form_name, fq_ingredient, ready_ingredient)
+                self.log("%s needs ingredient %s which has value of %s" % (cauldron_form.form_name, fq_ingredient, ready_ingredient))
                 fresh_ingredients[short_ingredient] = ready_ingredient
         return fresh_ingredients
-                
 
+
+    def get_form_data(self, form_name):
+        """
+        rough and ready method that should be EOFed
+        @return: dictionary of  'form_fields' -> dict returned from django form
+                                'resulting_ingredients' -> dict of properties that are in demand
+                                                           by other forms
+                 or None if form_name has no data
+        """
+        if not form_name in settings.TEMP_DATA:
+            return None
+        return settings.TEMP_DATA[form_name]
+
+    def log(self, msg, level="INFO"):
+        print level+" "+msg
 
 class CauldronFormMixin(object):
     

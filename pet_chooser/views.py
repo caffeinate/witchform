@@ -31,7 +31,11 @@ def witch_journey(request, form_name=None):
 
     else:
         cauldron = PetsCauldron(form_name)
-        form = cauldron.current_form.instance
+        current_form = cauldron.current_form
+        if current_form == None:
+            return HttpResponseRedirect(reverse('finished'))
+
+        form = current_form.instance
 
     context_vars['form'] = form
     context_vars['cauldron'] = cauldron
@@ -43,7 +47,22 @@ def witch_journey(request, form_name=None):
 
 def finished_journey(request):
 
-    context_vars = {}
+    cauldron = PetsCauldron()
+
+    context_vars = {'get' : {} }
+
+    for form_name, property_name, pet_name in [('SuggestGerbil', 'get_gerbil', 'gerbil'),
+                                               ('SuggestHorse', 'get_horse', 'horse'),
+                                               ('SuggestCrocodile', 'get_croc', 'crocodile')
+                                              ]:
+        try:
+            result = cauldron.get_form_data(form_name)['resulting_ingredients'][property_name]
+        except:
+            result = False
+
+        context_vars['get'][pet_name] = result
+
+
     return render_to_response('finished.html',
                           context_vars,
                           context_instance=RequestContext(request))
